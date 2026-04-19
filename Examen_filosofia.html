@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Examen de Filosofía</title>
+    <!-- Librería para generar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f4f7fc;
+            margin: 0;
+            padding: 20px;
+            color: #1e2b3c;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px 20px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-top: 0;
+            margin-bottom: 5px;
+            color: #0a2540;
+        }
+        .subtitulo {
+            color: #5c6f87;
+            margin-bottom: 25px;
+            border-left: 4px solid #3b71ca;
+            padding-left: 15px;
+            font-weight: 400;
+        }
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+            color: #1e3a6f;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 24px;
+            border: 1.5px solid #dde3ed;
+            border-radius: 16px;
+            font-size: 16px;
+            box-sizing: border-box;
+            font-family: inherit;
+            transition: border 0.2s;
+            background: #fafcff;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #3b71ca;
+            outline: none;
+            background: white;
+        }
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        button {
+            background: #0a2540;
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 40px;
+            width: 100%;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-top: 10px;
+        }
+        button:active { background: #1e3a6f; }
+        button:disabled {
+            background: #b0c4de;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        .alerta-seguridad {
+            background: #fef9e7;
+            border: 1px solid #f7dc6f;
+            padding: 15px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            color: #7d6608;
+        }
+        .bloqueado-mensaje {
+            text-align: center;
+            background: #fee;
+            padding: 30px;
+            border-radius: 24px;
+            color: #b33;
+        }
+        .footer-norma {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            text-align: center;
+            color: #8a9bb5;
+        }
+        .btn-descarga {
+            background: #2e7d32;
+            margin-top: 15px;
+        }
+        .btn-descarga:active { background: #1b5e20; }
+        .pregunta-container {
+            margin-bottom: 10px;
+        }
+        .pregunta-texto {
+            background: #eef3fc;
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+        .resumen-datos {
+            background: #eef3fc;
+            padding: 12px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="appContainer">
+    <h1>Temas de Filosofía y Lógica en Psicología</h1>
+    <div class="subtitulo" id="subtituloExamen">Examen Parcial</div>
+
+    <div id="examenActivo">
+        <div class="alerta-seguridad">
+            <strong>Advertencia:</strong> Esta sesión se encuentra monitoreada. Si abandona esta pantalla (cambia de app, minimiza o bloquea el teléfono por más de 5 segundos), el sistema enviará sus respuestas con estado <strong>"ABANDONO"</strong> y no podrá continuar. Si tiene algún inconveniente consulte al docente.
+        </div>
+
+        <!-- PASO 1: DATOS PERSONALES -->
+        <div id="paso1">
+            <label>Nombre</label>
+            <input type="text" id="nombre" placeholder="Ej: Ana Laura" autocomplete="off" required>
+
+            <label>Apellido</label>
+            <input type="text" id="apellido" placeholder="Ej: Pérez" autocomplete="off" required>
+
+            <label>DNI (sin puntos)</label>
+            <input type="text" id="dni" placeholder="Ej: 40123456" inputmode="numeric" pattern="\d*" required>
+
+            <label>Tema</label>
+            <select id="temaSelect">
+                <option value="Tema 1">Tema 1</option>
+                <option value="Tema 2">Tema 2</option>
+            </select>
+
+            <button id="btnContinuar">Continuar al Examen</button>
+        </div>
+
+        <!-- PASO 2: PREGUNTAS -->
+        <div id="paso2" style="display: none;">
+            <div class="resumen-datos">
+                <span id="resumenNombre"></span> <span id="resumenApellido"></span> - DNI: <span id="resumenDNI"></span> - Tema: <span id="resumenTema"></span>
+            </div>
+
+            <div id="preguntasContainer"></div>
+
+            <button id="btnEnviar">Finalizar y Entregar Examen</button>
+            <p style="font-size: 0.9rem; color: #5c6f87; margin-top: 5px; text-align: center;">Descargue y guarde el comprobante luego de entregar el examen.</p>
+            <button id="btnDescargarPDF" class="btn-descarga" style="display: none;" disabled>Descargar Comprobante (PDF)</button>
+        </div>
+    </div>
+
+    <!-- PANEL BLOQUEADO -->
+    <div id="examenBloqueado" style="display: none;">
+        <div class="bloqueado-mensaje">
+            <h2>Examen Finalizado</h2>
+            <p id="mensajeBloqueo">Usted ha salido de la aplicación o ya ha entregado el examen.</p>
+            <p style="margin-top: 20px; font-size: 0.9rem;">Si esto es un error, comuníquese con el docente.</p>
+        </div>
+    </div>
+    <div class="footer-norma">Sesión monitoreada - Cátedra de Temas de Filosofía y Lógica en Psicología</div>
+</div>
+
+<script>
+    // ===================== CONFIGURACIÓN =====================
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzIuYxGAVAIIEkIFtbV0pSBS0r5mnU5TOKqx9ZsUZNjj5bqujRU6ElwXYEifBXCka-rbQ/exec';
+
+    const EXAMEN_CONFIG = {
+        titulo: "Temas de Filosofía y Lógica en Psicología",
+        temas: {
+            "Tema 1": {
+                preguntas: [
+                    "Explique el concepto Poiesis en Platón",
+                    "Compare la cosmovisión antigua con la cosmovisión medieval"
+                ]
+            },
+            "Tema 2": {
+                preguntas: [
+                    "Desarrolle la crítica de Nietzsche a la metafísica platónica.",
+                    "¿Cual es la función de Dios en las meditaciones metafísicas de Descartes?"
+                ]
+            }
+        }
+    };
+
+    // =========================================================
+    const STORAGE_KEY = 'EXAMEN_FILO_FINALIZADO_2026';
+    let examenFinalizado = false;
+    let respuestasEnviadas = null;
+    let hashEmitido = "";
+    let temporizadorAbandono = null;
+    let oportunidadUsada = false;
+    let datosPersonales = {};
+
+    const activoDiv = document.getElementById('examenActivo');
+    const bloqueadoDiv = document.getElementById('examenBloqueado');
+    const mensajeBloqueo = document.getElementById('mensajeBloqueo');
+    const subtitulo = document.getElementById('subtituloExamen');
+    const nombreInput = document.getElementById('nombre');
+    const apellidoInput = document.getElementById('apellido');
+    const dniInput = document.getElementById('dni');
+    const temaSelect = document.getElementById('temaSelect');
+    const preguntasContainer = document.getElementById('preguntasContainer');
+    const btnEnviar = document.getElementById('btnEnviar');
+    const btnDescargarPDF = document.getElementById('btnDescargarPDF');
+    const paso1Div = document.getElementById('paso1');
+    const paso2Div = document.getElementById('paso2');
+    const btnContinuar = document.getElementById('btnContinuar');
+    const resumenNombre = document.getElementById('resumenNombre');
+    const resumenApellido = document.getElementById('resumenApellido');
+    const resumenDNI = document.getElementById('resumenDNI');
+    const resumenTema = document.getElementById('resumenTema');
+
+    subtitulo.textContent = "Examen Parcial";
+
+    function generarHash(texto) {
+        let hash = 0;
+        for (let i = 0; i < texto.length; i++) {
+            const char = texto.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        const timestamp = Date.now().toString(36);
+        const hashHex = (hash >>> 0).toString(16).padStart(8, '0');
+        return hashHex + '-' + timestamp;
+    }
+
+    function renderizarPreguntas(tema) {
+        const preguntas = EXAMEN_CONFIG.temas[tema].preguntas;
+        let html = '';
+        preguntas.forEach((pregunta, index) => {
+            html += `
+                <div class="pregunta-container">
+                    <label>Pregunta ${index + 1}</label>
+                    <div class="pregunta-texto">${pregunta}</div>
+                    <textarea id="respuesta${index}" placeholder="Escriba su respuesta aquí..."></textarea>
+                </div>
+            `;
+        });
+        preguntasContainer.innerHTML = html;
+    }
+
+    btnContinuar.addEventListener('click', () => {
+        const nombre = nombreInput.value.trim();
+        const apellido = apellidoInput.value.trim();
+        const dni = dniInput.value.trim();
+        if (!nombre || !apellido || !dni) {
+            alert('Complete todos los datos personales.');
+            return;
+        }
+        datosPersonales = { nombre, apellido, dni, tema: temaSelect.value };
+        resumenNombre.textContent = nombre;
+        resumenApellido.textContent = apellido;
+        resumenDNI.textContent = dni;
+        resumenTema.textContent = temaSelect.value;
+        
+        paso1Div.style.display = 'none';
+        paso2Div.style.display = 'block';
+        renderizarPreguntas(temaSelect.value);
+        
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+    });
+
+    function obtenerRespuestas() {
+        const tema = datosPersonales.tema;
+        const cantPreguntas = EXAMEN_CONFIG.temas[tema].preguntas.length;
+        const respuestas = {};
+        for (let i = 0; i < cantPreguntas; i++) {
+            const textarea = document.getElementById(`respuesta${i}`);
+            respuestas[`r${i+1}`] = textarea ? textarea.value.trim() : "";
+        }
+        return respuestas;
+    }
+
+    async function enviarDatos(estadoFinal) {
+        if (examenFinalizado) return;
+        examenFinalizado = true;
+        
+        if (temporizadorAbandono) {
+            clearTimeout(temporizadorAbandono);
+            temporizadorAbandono = null;
+        }
+
+        const respuestasObj = obtenerRespuestas();
+        
+        const datos = {
+            nombre: datosPersonales.nombre,
+            apellido: datosPersonales.apellido,
+            dni: datosPersonales.dni,
+            tema: datosPersonales.tema,
+            r1: respuestasObj.r1 || "",
+            r2: respuestasObj.r2 || "",
+            r3: respuestasObj.r3 || "",
+            r4: respuestasObj.r4 || "",
+            r5: respuestasObj.r5 || "",
+            r6: respuestasObj.r6 || "",
+            estado: estadoFinal
+        };
+
+        const textoParaHash = datos.dni + "|" + datos.r1 + "|" + datos.r2 + "|" + datos.r3 + "|" + datos.r4 + "|" + datos.r5 + "|" + datos.r6 + "|" + Date.now();
+        datos.hash = generarHash(textoParaHash);
+        hashEmitido = datos.hash;
+
+        respuestasEnviadas = {
+            ...datos,
+            preguntas: EXAMEN_CONFIG.temas[datosPersonales.tema].preguntas
+        };
+
+        nombreInput.disabled = true;
+        apellidoInput.disabled = true;
+        dniInput.disabled = true;
+        temaSelect.disabled = true;
+        document.querySelectorAll('textarea').forEach(t => t.disabled = true);
+        btnEnviar.disabled = true;
+        btnDescargarPDF.style.display = 'block';
+        btnDescargarPDF.disabled = false;
+
+        localStorage.setItem(STORAGE_KEY, 'FINALIZADO');
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            });
+        } catch (error) {
+            console.error("Error de red:", error);
+        }
+    }
+
+    function mostrarPantallaBloqueo(mensaje) {
+        activoDiv.style.display = 'none';
+        bloqueadoDiv.style.display = 'block';
+        mensajeBloqueo.innerText = mensaje;
+    }
+
+    // Función PDF corregida con nombre de cátedra
+    async function generarPDF() {
+        if (!respuestasEnviadas) {
+            alert('No hay datos de examen para generar el PDF. Contacte al docente.');
+            return;
+        }
+
+        if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+            alert('Error: No se pudo cargar la librería de PDF. Intente recargar la página o use otro navegador.');
+            return;
+        }
+
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const fecha = new Date().toLocaleString('es-AR');
+
+            let y = 20;
+            doc.setFontSize(16);
+            doc.text("COMPROBANTE OFICIAL DE EXAMEN", 105, y, { align: 'center' });
+            y += 10;
+            doc.setFontSize(11);
+            doc.text("Cátedra de Temas de Filosofía y Lógica en Psicología", 105, y, { align: 'center' });
+            y += 8;
+            doc.text(`Fecha: ${fecha}`, 105, y, { align: 'center' });
+            y += 12;
+
+            doc.setFontSize(12);
+            doc.text(`Alumno: ${respuestasEnviadas.apellido}, ${respuestasEnviadas.nombre}`, 20, y);
+            y += 8;
+            doc.text(`DNI: ${respuestasEnviadas.dni}`, 20, y);
+            y += 8;
+            doc.text(`Tema: ${respuestasEnviadas.tema}`, 20, y);
+            y += 15;
+
+            doc.setFontSize(13);
+            doc.text("PREGUNTAS Y RESPUESTAS:", 20, y);
+            y += 8;
+            doc.setFontSize(11);
+
+            const preguntas = respuestasEnviadas.preguntas;
+            for (let i = 0; i < preguntas.length; i++) {
+                const pregunta = preguntas[i];
+                const respuesta = respuestasEnviadas[`r${i+1}`] || "(Sin respuesta)";
+                
+                doc.text(`${i+1}. ${pregunta}`, 20, y);
+                y += 6;
+                const lines = doc.splitTextToSize(`Respuesta: ${respuesta}`, 170);
+                doc.text(lines, 25, y);
+                y += lines.length * 6 + 6;
+
+                if (y > 260) {
+                    doc.addPage();
+                    y = 20;
+                }
+            }
+
+            y += 10;
+            doc.setFontSize(10);
+            doc.text("CODIGO DE VERIFICACION:", 20, y);
+            y += 6;
+            doc.setTextColor(100, 100, 100);
+            doc.text(hashEmitido, 20, y);
+            doc.setTextColor(0, 0, 0);
+            y += 12;
+            doc.text("Este documento es un comprobante digital. Cualquier alteracion invalida el codigo.", 20, y);
+
+            doc.save(`Examen_${respuestasEnviadas.apellido}_${respuestasEnviadas.dni}.pdf`);
+        } catch (error) {
+            console.error('Error al generar PDF:', error);
+            alert('Ocurrió un error al generar el PDF. Por favor, informe al docente.');
+        }
+    }
+
+    btnEnviar.addEventListener('click', async (e) => {
+        e.preventDefault();
+        if (examenFinalizado) return;
+        await enviarDatos('ENTREGADO');
+        mostrarPantallaBloqueo('Su examen ha sido entregado correctamente. Gracias.');
+    });
+
+    btnDescargarPDF.addEventListener('click', () => {
+        generarPDF();
+    });
+
+    function handleVisibilityChange() {
+        if (examenFinalizado) return;
+        
+        if (document.visibilityState === 'hidden') {
+            if (oportunidadUsada) {
+                enviarDatos('ABANDONO_APP');
+                mostrarPantallaBloqueo('Ha abandonado la aplicación por segunda vez. Examen finalizado.');
+                return;
+            }
+            
+            temporizadorAbandono = setTimeout(() => {
+                enviarDatos('ABANDONO_APP');
+                mostrarPantallaBloqueo('Se ha registrado su salida de la aplicación. El examen queda cerrado con estado "ABANDONO".');
+            }, 5000);
+        } else {
+            if (temporizadorAbandono) {
+                clearTimeout(temporizadorAbandono);
+                temporizadorAbandono = null;
+                oportunidadUsada = true;
+                alert('Ha regresado a tiempo. Atención: no se permitirán más salidas. La próxima vez el examen se cerrará automáticamente.');
+            }
+        }
+    }
+
+    window.addEventListener('beforeunload', (e) => {
+        if (!examenFinalizado && datosPersonales.nombre) {
+            const respuestasObj = obtenerRespuestas();
+            const datos = {
+                nombre: datosPersonales.nombre,
+                apellido: datosPersonales.apellido,
+                dni: datosPersonales.dni,
+                tema: datosPersonales.tema,
+                r1: respuestasObj.r1 || "",
+                r2: respuestasObj.r2 || "",
+                r3: respuestasObj.r3 || "",
+                r4: respuestasObj.r4 || "",
+                r5: respuestasObj.r5 || "",
+                r6: respuestasObj.r6 || "",
+                estado: 'ABANDONO_APP',
+                hash: generarHash(datosPersonales.dni + Date.now())
+            };
+            if (navigator.sendBeacon) {
+                const blob = new Blob([JSON.stringify(datos)], {type: 'application/json'});
+                navigator.sendBeacon(SCRIPT_URL, blob);
+            }
+            localStorage.setItem(STORAGE_KEY, 'FINALIZADO');
+        }
+    });
+
+    if (localStorage.getItem(STORAGE_KEY) === 'FINALIZADO') {
+        activoDiv.style.display = 'none';
+        bloqueadoDiv.style.display = 'block';
+        mensajeBloqueo.innerText = 'El examen ya ha sido registrado. No puede volver a acceder.';
+        examenFinalizado = true;
+    }
+</script>
+</body>
+</html>
