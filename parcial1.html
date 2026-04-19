@@ -110,6 +110,13 @@
             margin-top: 15px;
         }
         .btn-descarga:active { background: #1b5e20; }
+        .btn-reinicio {
+            background: #6c757d;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            padding: 10px 16px;
+        }
+        .btn-reinicio:active { background: #5a6268; }
         .pregunta-container {
             margin-bottom: 10px;
         }
@@ -169,17 +176,20 @@
             <div id="preguntasContainer"></div>
 
             <button id="btnEnviar">Finalizar y Entregar Examen</button>
-            <p style="font-size: 0.9rem; color: #5c6f87; margin-top: 5px; text-align: center;">Descargue y guarde el comprobante luego de entregar el examen.</p>
-            <button id="btnDescargarPDF" class="btn-descarga" style="display: none;" disabled>Descargar Comprobante (PDF)</button>
+            <p style="font-size: 0.9rem; color: #5c6f87; margin-top: 5px; text-align: center;">Una vez finalizado, podrá descargar el comprobante.</p>
         </div>
     </div>
 
-    <!-- PANEL BLOQUEADO -->
+    <!-- PANEL BLOQUEADO (POST-EXAMEN) -->
     <div id="examenBloqueado" style="display: none;">
         <div class="bloqueado-mensaje">
             <h2>Examen Finalizado</h2>
             <p id="mensajeBloqueo">Usted ha salido de la aplicación o ya ha entregado el examen.</p>
-            <p style="margin-top: 20px; font-size: 0.9rem;">Si esto es un error, comuníquese con el docente.</p>
+            <p style="margin-top: 20px; font-size: 0.9rem;">Descargue su comprobante o contacte al docente si necesita reiniciar.</p>
+            
+            <!-- Botones en la pantalla final -->
+            <button id="btnDescargarPDFFinal" class="btn-descarga">Descargar Comprobante (PDF)</button>
+            <button id="btnReinicioDocente" class="btn-reinicio">Reinicio Docente</button>
         </div>
     </div>
     <div class="footer-norma">Sesión monitoreada - Cátedra de Temas de Filosofía y Lógica en Psicología</div>
@@ -188,20 +198,23 @@
 <script>
     // ===================== CONFIGURACIÓN =====================
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzIuYxGAVAIIEkIFtbV0pSBS0r5mnU5TOKqx9ZsUZNjj5bqujRU6ElwXYEifBXCka-rbQ/exec';
+    
+    // CLAVE PARA REINICIO DOCENTE (cámbiala por la que quieras)
+    const CLAVE_DOCENTE = "FILO2026";
 
     const EXAMEN_CONFIG = {
         titulo: "Temas de Filosofía y Lógica en Psicología",
         temas: {
             "Tema 1": {
                 preguntas: [
-                    "Explique el concepto Poiesis en Platón",
-                    "Compare la cosmovisión antigua con la cosmovisión medieval"
+                    "Explique el concepto de 'Dasein' en Heidegger y su relación con la temporalidad.",
+                    "Compare la noción de 'alienación' en Marx con el concepto de 'mala fe' en Sartre."
                 ]
             },
             "Tema 2": {
                 preguntas: [
                     "Desarrolle la crítica de Nietzsche a la metafísica platónica.",
-                    "¿Cual es la función de Dios en las meditaciones metafísicas de Descartes?"
+                    "¿Por qué la 'duda metódica' cartesiana es un medio y no un fin?"
                 ]
             }
         }
@@ -226,7 +239,8 @@
     const temaSelect = document.getElementById('temaSelect');
     const preguntasContainer = document.getElementById('preguntasContainer');
     const btnEnviar = document.getElementById('btnEnviar');
-    const btnDescargarPDF = document.getElementById('btnDescargarPDF');
+    const btnDescargarPDFFinal = document.getElementById('btnDescargarPDFFinal');
+    const btnReinicioDocente = document.getElementById('btnReinicioDocente');
     const paso1Div = document.getElementById('paso1');
     const paso2Div = document.getElementById('paso2');
     const btnContinuar = document.getElementById('btnContinuar');
@@ -237,6 +251,7 @@
 
     subtitulo.textContent = "Examen Parcial";
 
+    // Función para generar un hash simple
     function generarHash(texto) {
         let hash = 0;
         for (let i = 0; i < texto.length; i++) {
@@ -249,6 +264,7 @@
         return hashHex + '-' + timestamp;
     }
 
+    // Renderizar preguntas según tema
     function renderizarPreguntas(tema) {
         const preguntas = EXAMEN_CONFIG.temas[tema].preguntas;
         let html = '';
@@ -336,8 +352,6 @@
         temaSelect.disabled = true;
         document.querySelectorAll('textarea').forEach(t => t.disabled = true);
         btnEnviar.disabled = true;
-        btnDescargarPDF.style.display = 'block';
-        btnDescargarPDF.disabled = false;
 
         localStorage.setItem(STORAGE_KEY, 'FINALIZADO');
 
@@ -359,7 +373,7 @@
         mensajeBloqueo.innerText = mensaje;
     }
 
-    // Función PDF corregida con nombre de cátedra
+    // Generar PDF (ahora llamado desde el botón en la pantalla final)
     async function generarPDF() {
         if (!respuestasEnviadas) {
             alert('No hay datos de examen para generar el PDF. Contacte al docente.');
@@ -433,6 +447,7 @@
         }
     }
 
+    // Evento del botón de envío
     btnEnviar.addEventListener('click', async (e) => {
         e.preventDefault();
         if (examenFinalizado) return;
@@ -440,10 +455,24 @@
         mostrarPantallaBloqueo('Su examen ha sido entregado correctamente. Gracias.');
     });
 
-    btnDescargarPDF.addEventListener('click', () => {
+    // Evento del botón de descarga (en pantalla final)
+    btnDescargarPDFFinal.addEventListener('click', () => {
         generarPDF();
     });
 
+    // Evento del botón de reinicio docente
+    btnReinicioDocente.addEventListener('click', () => {
+        const password = prompt('Ingrese la clave de reinicio:');
+        if (password === CLAVE_DOCENTE) {
+            localStorage.removeItem(STORAGE_KEY);
+            alert('Reinicio exitoso. La página se recargará.');
+            location.reload();
+        } else {
+            alert('Clave incorrecta.');
+        }
+    });
+
+    // Detección de abandono
     function handleVisibilityChange() {
         if (examenFinalizado) return;
         
@@ -493,6 +522,7 @@
         }
     });
 
+    // Verificar estado al cargar
     if (localStorage.getItem(STORAGE_KEY) === 'FINALIZADO') {
         activoDiv.style.display = 'none';
         bloqueadoDiv.style.display = 'block';
