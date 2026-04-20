@@ -134,11 +134,35 @@
             margin-bottom: 20px;
             font-size: 0.95rem;
         }
+        /* Pantalla de acceso */
+        .acceso-container {
+            text-align: center;
+        }
+        .error-message {
+            color: #b33;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
 
-<div class="container" id="appContainer">
+<!-- PANTALLA DE ACCESO (CLAVE) -->
+<div id="pantallaAcceso" class="container">
+    <h1>Temas de Filosofía y Lógica en Psicología</h1>
+    <div class="subtitulo">Examen Parcial</div>
+    <div class="acceso-container">
+        <p style="margin-bottom: 20px;">Ingrese la clave de acceso proporcionada por el docente.</p>
+        <label>Clave de acceso</label>
+        <input type="password" id="claveInput" placeholder="••••••••" autocomplete="off">
+        <button id="btnAcceder">Ingresar al Examen</button>
+        <p id="errorAcceso" class="error-message"></p>
+    </div>
+    <div class="footer-norma">Sesión monitoreada - Cátedra de Temas de Filosofía y Lógica en Psicología</div>
+</div>
+
+<!-- CONTENEDOR PRINCIPAL DEL EXAMEN (OCULTO INICIALMENTE) -->
+<div id="appContainer" class="container" style="display: none;">
     <h1>Temas de Filosofía y Lógica en Psicología</h1>
     <div class="subtitulo" id="subtituloExamen">Examen Parcial</div>
 
@@ -201,26 +225,29 @@
     
     // CLAVE PARA REINICIO DOCENTE (cámbiala por la que quieras)
     const CLAVE_DOCENTE = "FILO2026";
+    
+    // CLAVE DE ACCESO AL EXAMEN (cámbiala para cada parcial)
+    const CLAVE_ACCESO = "PARCIAL1-2026";
 
     const EXAMEN_CONFIG = {
-    titulo: "Temas de Filosofía y Lógica en Psicología",
-    temas: {
-        "Tema 1": {
-            preguntas: [
-                "Teniendo en cuenta el Banquete de Platón, explique el concepto de Poiesis.",
-                "Diferencie cosmovisión antigua de cosmovisión medieval.",
-                "Desarrolle el itinerario de la duda en las meditaciones metafisicas de Descartes"
-            ]
-        },
-        "Tema 2": {
-            preguntas: [
-                "Explique por qué para Sartre la existencia precede a la esencia.",
-                "Explique la crisis de la modernidad desde Nietzsche.",
-                "Cual es la relación planteada en el Banquete de Platón entre Eros y la Filosofía"
-            ]
+        titulo: "Temas de Filosofía y Lógica en Psicología",
+        temas: {
+            "Tema 1": {
+                preguntas: [
+                    "Teniendo en cuenta el Banquete de Platón, explique el concepto de Poiesis.",
+                    "Diferencie cosmovisión antigua de cosmovisión medieval.",
+                    "Describa la función del mito de la caverna en la filosofía platónica."
+                ]
+            },
+            "Tema 2": {
+                preguntas: [
+                    "Explique por qué para Sartre la existencia precede a la esencia.",
+                    "Explique la crisis de la modernidad desde Nietzsche.",
+                    "Compare el concepto de libertad en Sartre y en el existencialismo cristiano."
+                ]
+            }
         }
-    }
-};
+    };
 
     // =========================================================
     const STORAGE_KEY = 'EXAMEN_FILO_FINALIZADO_2026';
@@ -231,6 +258,14 @@
     let oportunidadUsada = false;
     let datosPersonales = {};
 
+    // Referencias DOM (pantalla acceso)
+    const pantallaAcceso = document.getElementById('pantallaAcceso');
+    const appContainer = document.getElementById('appContainer');
+    const claveInput = document.getElementById('claveInput');
+    const btnAcceder = document.getElementById('btnAcceder');
+    const errorAcceso = document.getElementById('errorAcceso');
+
+    // Referencias DOM (examen)
     const activoDiv = document.getElementById('examenActivo');
     const bloqueadoDiv = document.getElementById('examenBloqueado');
     const mensajeBloqueo = document.getElementById('mensajeBloqueo');
@@ -253,7 +288,27 @@
 
     subtitulo.textContent = "Examen Parcial";
 
-    // Función para generar un hash simple
+    // ---------- VALIDACIÓN DE ACCESO ----------
+    btnAcceder.addEventListener('click', () => {
+        const clave = claveInput.value.trim();
+        if (clave === CLAVE_ACCESO) {
+            pantallaAcceso.style.display = 'none';
+            appContainer.style.display = 'block';
+            errorAcceso.textContent = '';
+        } else {
+            errorAcceso.textContent = 'Clave incorrecta. Intente nuevamente.';
+            claveInput.value = '';
+            claveInput.focus();
+        }
+    });
+
+    claveInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            btnAcceder.click();
+        }
+    });
+
+    // ---------- FUNCIONES DEL EXAMEN ----------
     function generarHash(texto) {
         let hash = 0;
         for (let i = 0; i < texto.length; i++) {
@@ -266,7 +321,6 @@
         return hashHex + '-' + timestamp;
     }
 
-    // Renderizar preguntas según tema
     function renderizarPreguntas(tema) {
         const preguntas = EXAMEN_CONFIG.temas[tema].preguntas;
         let html = '';
@@ -375,7 +429,6 @@
         mensajeBloqueo.innerText = mensaje;
     }
 
-    // Generar PDF (ahora llamado desde el botón en la pantalla final)
     async function generarPDF() {
         if (!respuestasEnviadas) {
             alert('No hay datos de examen para generar el PDF. Contacte al docente.');
@@ -449,7 +502,6 @@
         }
     }
 
-    // Evento del botón de envío
     btnEnviar.addEventListener('click', async (e) => {
         e.preventDefault();
         if (examenFinalizado) return;
@@ -457,12 +509,10 @@
         mostrarPantallaBloqueo('Su examen ha sido entregado correctamente. Gracias.');
     });
 
-    // Evento del botón de descarga (en pantalla final)
     btnDescargarPDFFinal.addEventListener('click', () => {
         generarPDF();
     });
 
-    // Evento del botón de reinicio docente
     btnReinicioDocente.addEventListener('click', () => {
         const password = prompt('Ingrese la clave de reinicio:');
         if (password === CLAVE_DOCENTE) {
@@ -474,7 +524,6 @@
         }
     });
 
-    // Detección de abandono
     function handleVisibilityChange() {
         if (examenFinalizado) return;
         
@@ -524,8 +573,10 @@
         }
     });
 
-    // Verificar estado al cargar
+    // Verificar estado al cargar (solo si se superó la pantalla de acceso)
     if (localStorage.getItem(STORAGE_KEY) === 'FINALIZADO') {
+        appContainer.style.display = 'block';
+        pantallaAcceso.style.display = 'none';
         activoDiv.style.display = 'none';
         bloqueadoDiv.style.display = 'block';
         mensajeBloqueo.innerText = 'El examen ya ha sido registrado. No puede volver a acceder.';
