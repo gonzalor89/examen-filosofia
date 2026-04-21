@@ -134,7 +134,6 @@
             margin-bottom: 20px;
             font-size: 0.95rem;
         }
-        /* Pantalla de acceso */
         .acceso-container {
             text-align: center;
         }
@@ -142,6 +141,12 @@
             color: #b33;
             margin-top: 10px;
             font-size: 0.9rem;
+        }
+        .hint-text {
+            font-size: 0.85rem;
+            color: #5c6f87;
+            margin-top: -15px;
+            margin-bottom: 5px;
         }
     </style>
 </head>
@@ -188,6 +193,18 @@
                 <option value="Tema 2">Tema 2</option>
             </select>
 
+            <label>Comisión</label>
+            <p class="hint-text">Seleccione la comisión en la que se encuentra INSCRIPTO:</p>
+            <select id="comisionSelect" required>
+                <option value="">-- Seleccione una comisión --</option>
+                <option value="Comisión 1: Lun 09:30 a 11:00">Comisión 1: Lun 09:30 a 11:00</option>
+                <option value="Comisión 2: Mar 16:00 a 17:30">Comisión 2: Mar 16:00 a 17:30</option>
+                <option value="Comisión 3: Mar 17:30 a 19:00">Comisión 3: Mar 17:30 a 19:00</option>
+                <option value="Comisión 4: Mie 08:00 a 09:30">Comisión 4: Mie 08:00 a 09:30</option>
+                <option value="Comisión 5: Vie 08:00 a 09:30">Comisión 5: Vie 08:00 a 09:30</option>
+                <option value="Comisión 6: Vie 09:30 a 11:00">Comisión 6: Vie 09:30 a 11:00</option>
+            </select>
+
             <button id="btnContinuar">Continuar al Examen</button>
         </div>
 
@@ -211,7 +228,6 @@
             <p id="mensajeBloqueo">Usted ha salido de la aplicación o ya ha entregado el examen.</p>
             <p style="margin-top: 20px; font-size: 0.9rem;">Descargue su comprobante o contacte al docente si necesita reiniciar.</p>
             
-            <!-- Botones en la pantalla final -->
             <button id="btnDescargarPDFFinal" class="btn-descarga">Descargar Comprobante (PDF)</button>
             <button id="btnReinicioDocente" class="btn-reinicio">Reinicio Docente</button>
         </div>
@@ -223,11 +239,11 @@
     // ===================== CONFIGURACIÓN =====================
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzIuYxGAVAIIEkIFtbV0pSBS0r5mnU5TOKqx9ZsUZNjj5bqujRU6ElwXYEifBXCka-rbQ/exec';
     
-    // CLAVE PARA REINICIO DOCENTE (cámbiala por la que quieras)
+    // CLAVE PARA REINICIO DOCENTE
     const CLAVE_DOCENTE = "FILO2026";
     
     // CLAVE DE ACCESO AL EXAMEN (cámbiala para cada parcial)
-    const CLAVE_ACCESO = "PARCIAL1";
+    const CLAVE_ACCESO = "PARCIAL1-2026";
 
     const EXAMEN_CONFIG = {
         titulo: "Temas de Filosofía y Lógica en Psicología",
@@ -274,6 +290,7 @@
     const apellidoInput = document.getElementById('apellido');
     const dniInput = document.getElementById('dni');
     const temaSelect = document.getElementById('temaSelect');
+    const comisionSelect = document.getElementById('comisionSelect');
     const preguntasContainer = document.getElementById('preguntasContainer');
     const btnEnviar = document.getElementById('btnEnviar');
     const btnDescargarPDFFinal = document.getElementById('btnDescargarPDFFinal');
@@ -340,11 +357,12 @@
         const nombre = nombreInput.value.trim();
         const apellido = apellidoInput.value.trim();
         const dni = dniInput.value.trim();
-        if (!nombre || !apellido || !dni) {
-            alert('Complete todos los datos personales.');
+        const comision = comisionSelect.value;
+        if (!nombre || !apellido || !dni || !comision) {
+            alert('Complete todos los datos personales y seleccione una comisión.');
             return;
         }
-        datosPersonales = { nombre, apellido, dni, tema: temaSelect.value };
+        datosPersonales = { nombre, apellido, dni, tema: temaSelect.value, comision: comision };
         resumenNombre.textContent = nombre;
         resumenApellido.textContent = apellido;
         resumenDNI.textContent = dni;
@@ -384,6 +402,7 @@
             apellido: datosPersonales.apellido,
             dni: datosPersonales.dni,
             tema: datosPersonales.tema,
+            comision: datosPersonales.comision,   // <--- Se envía la comisión
             r1: respuestasObj.r1 || "",
             r2: respuestasObj.r2 || "",
             r3: respuestasObj.r3 || "",
@@ -406,6 +425,7 @@
         apellidoInput.disabled = true;
         dniInput.disabled = true;
         temaSelect.disabled = true;
+        comisionSelect.disabled = true;
         document.querySelectorAll('textarea').forEach(t => t.disabled = true);
         btnEnviar.disabled = true;
 
@@ -461,6 +481,8 @@
             doc.text(`DNI: ${respuestasEnviadas.dni}`, 20, y);
             y += 8;
             doc.text(`Tema: ${respuestasEnviadas.tema}`, 20, y);
+            y += 8;
+            doc.text(`Comisión: ${respuestasEnviadas.comision}`, 20, y);
             y += 15;
 
             doc.setFontSize(13);
@@ -556,6 +578,7 @@
                 apellido: datosPersonales.apellido,
                 dni: datosPersonales.dni,
                 tema: datosPersonales.tema,
+                comision: datosPersonales.comision,
                 r1: respuestasObj.r1 || "",
                 r2: respuestasObj.r2 || "",
                 r3: respuestasObj.r3 || "",
